@@ -1,0 +1,5 @@
+requests
+python-dotenv
+configparser
+python-oauth2
+plurk-oauth
