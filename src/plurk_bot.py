@@ -3,18 +3,15 @@ import re
 import json
 import time
 import urllib.request
-from plurk_oauth import PlurkAPI
-from response_content import ContentResponse
 
 
 class PlurkBot:
-    def __init__(self, consumer_key, consumer_secret, token, token_secret, gemini_api_key):
-        self.plurk = PlurkAPI(consumer_key, consumer_secret)
-        self.plurk.authorize(token, token_secret)
+    def __init__(self, plurk_api, content_response):
+        self.plurk = plurk_api
+        self.gemini_api = content_response
         self.comet_channel = None
         self.new_offset = -1
         self.jsonp_re = re.compile(r'CometChannel\.scriptCallback\((.+)\);\s*')
-        self.gemini_api = ContentResponse(gemini_api_key)
         logging.info("PlurkBot 初始化完成")
 
     def get_comet_channel(self):

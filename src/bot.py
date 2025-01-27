@@ -1,5 +1,7 @@
 import logging
 from config import load_config
+from plurk_oauth import PlurkAPI
+from response_content import ContentResponse
 from plurk_bot import PlurkBot
 
 # 設定日誌
@@ -10,14 +12,19 @@ def main():
     config = load_config()
     plurk_api_key = config['PLURK']
     gemini_api_key = config['GEMINI']['api_key']
-    # print(gemini_api_key)
-    bot = PlurkBot(
+
+    plurk_api = PlurkAPI(
         plurk_api_key['consumer_key'],
-        plurk_api_key['consumer_secret'],
-        plurk_api_key['token'],
-        plurk_api_key['token_secret'],
-        gemini_api_key  
+        plurk_api_key['consumer_secret']
     )
+    plurk_api.authorize(
+        plurk_api_key['token'],
+        plurk_api_key['token_secret']
+    )
+
+    content_response = ContentResponse(gemini_api_key)
+
+    bot = PlurkBot(plurk_api, content_response)
     logging.info("啟動 PlurkBot")
     bot.run()
 
