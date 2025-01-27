@@ -1,7 +1,9 @@
+import logging
 from dotenv import load_dotenv
 import os
 
 def load_config():
+    logging.info("載入 .env 文件")
     load_dotenv()
     config = {
         'PLURK': {
@@ -14,4 +16,5 @@ def load_config():
             'api_key': os.getenv('GEMINI_API_KEY')
         }
     }
+    logging.info("配置載入完成")
     return config

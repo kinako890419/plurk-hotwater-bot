@@ -1,11 +1,24 @@
 # 噗浪潑你冷水機器人
 
-前身是DC機器人
+前身是DC機器人 ([傳送門](https://github.com/kinako890419/discord_chatbot))
 
 ## 功能
 
-- 希望 + `!抽` + 噗文
-- 想要 + `!抱怨` + 噗文
-- 問 + `!為什麼` + 噗文
+- <span style="background-color:#E28EE1"><font color="#FFFFFF">希望</font></span> + `!抽` + 噗文
+- <span style="background-color:#A9B683"><font color="#FFFFFF">想要</font></span> + `!抱怨` + 噗文
+- <span style="background-color:#A48AC0"><font color="#FFFFFF">問</font></span> + `!為什麼` + 噗文
 
 驚嘆號全形或是半形皆可
+
+## 使用範例
+
+1. [範例1](https://www.plurk.com/p/3gti13irvn)
+2. [範例2](https://www.plurk.com/p/3gthw5n2sv)
+
+
+## 參考資料
+
+- [Plurk API 2.0 document](https://www.plurk.com/API)
+- [噗浪機器人範例程式 – 使用 Plurk API 2.0](https://dada.tw/blog/2011/10/28/426/)
+- [python plurk api 2.0 噗浪機器人製作教學 @豹豹BOT](https://hackmd.io/@SealSeal/Byr7M2abt)
+- [Gemini API 快速入門導覽課程](https://ai.google.dev/gemini-api/docs/quickstart?hl=zh-tw&lang=python)
