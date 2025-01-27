@@ -5,7 +5,7 @@ import time
 import urllib.request
 
 
-class PlurkBot:
+class PlurkResponse:
     def __init__(self, plurk_api, content_response):
         self.plurk = plurk_api
         self.gemini_api = content_response
