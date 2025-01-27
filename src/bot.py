@@ -1,4 +1,5 @@
 import logging
+import threading
 from config import load_config
 from plurk_oauth import PlurkAPI
 from plurk_response import PlurkResponse
@@ -28,8 +29,17 @@ def main():
     daily_post = DailyPost(plurk_api)
 
     logging.info("啟動 PlurkBot")
-    daily_post.schedule_daily_post()
-    bot.run()
+
+    # 使用多線程來同時執行 daily_post.schedule_daily_post() 和 bot.run()
+    daily_post_thread = threading.Thread(target=daily_post.schedule_daily_post)
+    bot_thread = threading.Thread(target=bot.run)
+
+    daily_post_thread.start()
+    bot_thread.start()
+
+    # 等待這兩個子線程結束
+    daily_post_thread.join()
+    bot_thread.join()
 
 if __name__ == "__main__":
     main()
