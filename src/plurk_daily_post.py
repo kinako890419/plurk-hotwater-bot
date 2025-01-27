@@ -22,7 +22,7 @@ class DailyPost:
         # 設定台灣時區
         taiwan_tz = pytz.timezone('Asia/Taipei')
         now = datetime.now(taiwan_tz)
-        target_time = now.replace(hour=16, minute=15, second=0, microsecond=0)
+        target_time = now.replace(hour=17, minute=15, second=0, microsecond=0)
 
         # 如果當前時間已過目標時間，則設定為明天的目標時間
         if now > target_time:
@@ -33,7 +33,7 @@ class DailyPost:
         # logging.info(f"等待 {wait_time} 秒後發布每日貼文")
 
         # 每日發文
-        schedule.every().day.at("16:15").do(self.post_daily_message)
+        schedule.every().day.at("17:15").do(self.post_daily_message)
 
         # 等待並執行排程
         while True:
