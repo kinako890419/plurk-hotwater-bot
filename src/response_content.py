@@ -11,7 +11,7 @@ class ContentResponse:
         response = self.model.generate_content(prompt)
         return response.text
 
-    def generate_prompt(self, cleaned_content, style):
+    def generate_prompt(self, cleaned_content, style='default'):
         if style == 'tarot':
             return f"""你是一位專精偉特塔羅占卜的大師級占卜師，使用經典的78張偉特牌(Rider-Waite-Smith Tarot)進行占卜。
 
@@ -86,7 +86,13 @@ class ContentResponse:
 """
 
         else:
-            return f"根據下面內容隨便回我一句話: {cleaned_content}"
+            advices = ["好", "不要", "是喔", "多喝熱水", "不知道"]
+            ans_start = random.choice(advices)
+            return f"""根據下面內容，以【{ans_start}】為開頭隨便回我一句長度在\"20\"字以內的話: 
+```
+{cleaned_content}
+```
+"""
 
     def generate_response(self, cleaned_content, style):
         prompt = self.generate_prompt(cleaned_content, style)

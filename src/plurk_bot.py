@@ -61,6 +61,15 @@ class PlurkBot:
                         'qualifier': 'thinks'
                     })
                     time.sleep(1)
+            else:
+                response = self.gemini_api.generate_response(content, 'default')
+                logging.info(f"回覆內容: {response}")
+                self.plurk.callAPI('/APP/Responses/responseAdd', {
+                    'plurk_id': pid,
+                    'content': response,
+                    'qualifier': 'thinks'
+                })
+                time.sleep(0.5)
         except Exception as e:
             logging.error(f"回覆訊息發生錯誤: {e}")
 
