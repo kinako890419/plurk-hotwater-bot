@@ -3,7 +3,8 @@ import re
 import json
 import time
 import urllib.request
-
+from plurk_oauth import PlurkAPI
+from response_content import ContentResponse
 
 class PlurkResponse:
     def __init__(self, plurk_api, content_response):
@@ -61,15 +62,6 @@ class PlurkResponse:
                         'qualifier': 'thinks'
                     })
                     time.sleep(1)
-            else:
-                response = self.gemini_api.generate_response(content, 'default')
-                logging.info(f"回覆內容: {response}")
-                self.plurk.callAPI('/APP/Responses/responseAdd', {
-                    'plurk_id': pid,
-                    'content': response,
-                    'qualifier': 'thinks'
-                })
-                time.sleep(0.5)
         except Exception as e:
             logging.error(f"回覆訊息發生錯誤: {e}")
 
@@ -83,10 +75,10 @@ class PlurkResponse:
                 self.respond_to_message(pid, content, qualifier)
 
     def run(self):
-        self.get_comet_channel()
-        logging.info("啟動 PlurkBot")
         while True:
             try:
+                self.get_comet_channel()
+                # logging.info("啟動 PlurkBot")
                 self.plurk.callAPI('/APP/Alerts/addAllAsFriends')
                 req = urllib.request.urlopen(self.comet_channel % self.new_offset, timeout=80)
                 rawdata = req.read().decode('utf-8')
