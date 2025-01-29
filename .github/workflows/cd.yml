@@ -18,6 +18,7 @@ jobs:
       run: |
         echo "${{ secrets.EC2_KEY }}" > ~/plurk-bot.pem
         chmod 400 ~/plurk-bot.pem
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
     - name: Deploy Code
       shell: bash
