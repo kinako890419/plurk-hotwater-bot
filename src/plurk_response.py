@@ -3,8 +3,7 @@ import re
 import json
 import time
 import urllib.request
-from plurk_oauth import PlurkAPI
-from response_content import ContentResponse
+import random
 
 class PlurkResponse:
     def __init__(self, plurk_api, content_response):
@@ -59,9 +58,47 @@ class PlurkResponse:
                     self.plurk.callAPI('/APP/Responses/responseAdd', {
                         'plurk_id': pid,
                         'content': part.strip(),
-                        'qualifier': 'thinks'
+                        'qualifier': 'feels'
                     })
                     time.sleep(1)
+            else:
+                random_num = random.randint(1, 100)
+
+                if (random_num <= 10) or ('機器人' in content):
+                    response_parts = self.gemini_api.generate_response(content.replace(' ', ''), 'default')
+                
+                    for part in response_parts:
+                        logging.info(f"回覆內容: {part.strip()}")
+                        self.plurk.callAPI('/APP/Responses/responseAdd', {
+                            'plurk_id': pid,
+                            'content': part.strip(),
+                            'qualifier': ':'
+                        })
+                        time.sleep(0.5)
+                elif '好不好' in content or '要不要' in content:
+                    random_yn = random.choice(['好', '不要', '[emo3]', '[emo4]'])
+                    self.plurk.callAPI('/APP/Responses/responseAdd', {
+                        'plurk_id': pid,
+                        'content': random_yn,
+                        'qualifier': 'feels'
+                    })
+                    time.sleep(0.5)
+                elif '熱水' in content:
+                    self.plurk.callAPI('/APP/Responses/responseAdd', {
+                        'plurk_id': pid,
+                        'content': '多喝熱水',
+                        'qualifier': 'says'
+                    })
+                    time.sleep(0.5)
+                else:
+                    if random_num >= 90:
+                        random_water = random.choice(['多喝熱水', '多喝冷水', '多喝冷水[emo5]', '多喝熱水[emo5]'])
+                        self.plurk.callAPI('/APP/Responses/responseAdd', {
+                        'plurk_id': pid,
+                        'content': random_water,
+                        'qualifier': ':'
+                    })
+                    time.sleep(0.5)
         except Exception as e:
             logging.error(f"回覆訊息發生錯誤: {e}")
 

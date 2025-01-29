@@ -86,9 +86,9 @@ class ContentResponse:
 """
 
         else:
-            advices = ["好", "不要", "是喔", "多喝熱水", "不知道"]
+            advices = ["好，", "好", "不要", "是喔，", "多喝熱水", "不知道", "不知道，", "不要，", "才不要，"]
             ans_start = random.choice(advices)
-            return f"""根據下面內容，以【{ans_start}】為開頭隨便回我一句長度在\"20\"字以內的話: 
+            return f"""根據下面內容，使用繁體中文，以【{ans_start}】為開頭隨便回我一句長度在\"20\"字以內的話: 
 ```
 {cleaned_content}
 ```
