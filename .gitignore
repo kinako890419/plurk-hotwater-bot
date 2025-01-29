@@ -17,3 +17,5 @@ venv/
 
 # Windows specific files
 Thumbs.db
+
+*.pem
