@@ -22,7 +22,7 @@ jobs:
     - name: Deploy Code
       shell: bash
       run: |
-        scp -i ~/plurk-bot.pem -r plurk-hotwater-bot ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/plurk-hotwater-bot
+        scp -i ~/plurk-bot.pem -r * ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/plurk-hotwater-bot
         ssh -i ~/plurk-bot.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
           cd ~/plurk-hotwater-bot
           python3 -m venv venv
