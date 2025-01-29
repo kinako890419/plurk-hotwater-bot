@@ -16,9 +16,12 @@ jobs:
     - name: Set Up SSH Key
       shell: bash
       run: |
+        mkdir -p ~/.ssh
         echo "${{ secrets.EC2_KEY }}" > ~/plurk-bot.pem
         chmod 400 ~/plurk-bot.pem
+        chmod 700 ~/.ssh
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        chmod 600 ~/.ssh/known_hosts
 
     - name: Deploy Code
       shell: bash
