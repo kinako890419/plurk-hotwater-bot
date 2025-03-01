@@ -4,7 +4,7 @@ import random
 
 def get_random_tarot_info():
     # 讀取JSON檔案
-    with open('tarot_zhtw.json', 'r', encoding='utf-8') as file:
+    with open('./src/tarot_zhtw.json', 'r', encoding='utf-8') as file:
         data = json.load(file)
 
     # 隨機選擇三張牌
