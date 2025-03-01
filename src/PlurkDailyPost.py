@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import pytz
 import logging
 
-class DailyPost:
+class PlurkDailyPost:
     def __init__(self, plurk_api):
         self.plurk = plurk_api
 

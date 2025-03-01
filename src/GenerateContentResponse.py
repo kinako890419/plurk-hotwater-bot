@@ -1,11 +1,11 @@
 import google.generativeai as genai
 import random
+from get_random_tarot_info import get_random_tarot_info
 
-
-class ContentResponse:
+class GenerateContentResponse:
     def __init__(self, api_key):
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        genai.configure(api_key=api_key, transport='rest')
+        self.model = genai.GenerativeModel("gemini-2.0-flash")
 
     def gemini_api_response(self, prompt):
         response = self.model.generate_content(prompt)
@@ -13,6 +13,7 @@ class ContentResponse:
 
     def generate_prompt(self, cleaned_content, style='default'):
         if style == 'tarot':
+            card_result, card_info_list = get_random_tarot_info()
             return f"""你是一位專精偉特塔羅占卜的大師級占卜師，使用經典的78張偉特牌(Rider-Waite-Smith Tarot)進行占卜。
 
 當我提出問題後，會產生抽牌結果，使用三張牌陣進行解讀：
@@ -21,31 +22,37 @@ class ContentResponse:
 - 右方（建議）：*未來可行的方向*
 
 請依照以下格式回覆：
+```
+**你抽到的牌是：{card_result}**
 
-**你抽到的牌是：<三張牌面結果做為標題>**
+---
 
 請依序為每張牌提供：
-1. **牌面資訊**
-- 牌名與編號(大阿爾卡納標註0-21)
-- 正逆位狀態
-- 3個關鍵字詮釋（以*斜體*標示）
 
-2. **內容分析**
+**1. 內容分析**
+- 牌名正逆位狀態
 - 牌義與提問的直接連結（重點以**粗體**標示）
 - 具體可行的建議（以bullet points呈現）
 
-**整體統整**
+**2. 整體統整**
 以三個段落分析：
-1. 三張牌的關聯性與整體趨勢
-2. 建議執行的時間點與行動方案
-3. 需要特別注意的警訊
+2.1. 三張牌的關聯性與整體趨勢
+2.2. 建議執行的時間點與行動方案
+2.3. 需要特別注意的警訊
+
+**3. 總結與建議**
+
+這段可根據提問給出相關建議
+
+```
 
 請在500字內完成回覆，確保描述生動且易於理解。每個建議都需要具體可執行，避免模糊空泛的建議。重要關鍵字請使用**粗體**標示，補充說明使用*斜體*標示。
-請將牌面資訊、內容分析與整體統整的內容各段落以`---`分隔，請注意每段以`---`分開的內容要在150字以內。
+請將牌面資訊、內容分析與整體統整的內容各段落以`---`分隔(markdown line)，請注意每段以`---`分開的內容要在150字以內。
 
 接下來我會提出我的問題，請直接給我問題的結果與回答： <{cleaned_content}>
 請注意如果您判斷這不是個疑問，則根據您的判斷，從<{cleaned_content}>當中的關鍵字提供一個占卜結果。
 不管回覆為何，請直接立即給我回覆，不必分成多段對話進行。
+語言一律使用繁體中文。
 """
         elif style == 'bad_advice':
             bad_advices = ["說不定他其實很討厭你", "你不能自己處理一下嗎？",
@@ -98,3 +105,10 @@ class ContentResponse:
         prompt = self.generate_prompt(cleaned_content, style)
         response = self.gemini_api_response(prompt)
         return response.split('---')
+    
+# if __name__ == "__main__":
+#     test_res = GenerateContentResponse("")
+#     response = test_res.generate_response("啊啊啊啊啊啊", "tarot")
+
+#     for res in response:
+#         print(res)

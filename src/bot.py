@@ -2,9 +2,9 @@ import logging
 import threading
 from config import load_config
 from plurk_oauth import PlurkAPI
-from plurk_response import PlurkResponse
-from plurk_daily_post import DailyPost
-from response_content import ContentResponse
+from PlurkPostResponse import PlurkPostResponse
+from PlurkDailyPost import PlurkDailyPost
+from GenerateContentResponse import GenerateContentResponse
 
 # 設定日誌
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -24,9 +24,9 @@ def main():
         plurk_api_key['token_secret']
     )
 
-    content_response = ContentResponse(gemini_api_key)
-    bot = PlurkResponse(plurk_api, content_response)
-    daily_post = DailyPost(plurk_api)
+    content_response = GenerateContentResponse(gemini_api_key)
+    bot = PlurkPostResponse(plurk_api, content_response)
+    daily_post = PlurkDailyPost(plurk_api)
 
     logging.info("啟動 PlurkBot")
 
