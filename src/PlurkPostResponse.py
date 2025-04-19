@@ -27,6 +27,11 @@ class PlurkPostResponse:
     def clear_user_status(self):
         self.user_status.clear()
         logging.info("清空 user_status")
+
+    def _run_schedule(self):
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
     
     def get_comet_channel(self):
         comet = self.plurk.callAPI('/APP/Realtime/getUserChannel')
