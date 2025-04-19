@@ -18,19 +18,12 @@ jobs:
       with:
         python-version: '3.12'
 
-    - name: Install dependencies
+    - name: Install dependencies --> 試跑bot.py看看 --> 停止bot.py
       run: |
         python -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
-
-    - name: 試跑bot.py看看
-      run: |
-        source venv/bin/activate
         python bot.py
-    
-    - name: 停止bot.py
-      run: |
         pkill -f bot.py || true
 
     # - name: Run tests
