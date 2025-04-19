@@ -23,6 +23,7 @@ jobs:
         python -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
+        cd src
         python bot.py
         pkill -f bot.py || true
 
