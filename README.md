@@ -11,10 +11,9 @@
 驚嘆號全形或是半形皆可
 
 ## 使用範例
-
-1. [範例1](https://www.plurk.com/p/3gti13irvn)
-2. [範例2](https://www.plurk.com/p/3gthw5n2sv)
-
+<br>
+<img src="screenshots/image.png" alt="Screenshot1" width="500"/><br><br>
+<img src="screenshots/image2.png" alt="Screenshot2" width="500"/><br><br>
 
 ## 參考資料
 
