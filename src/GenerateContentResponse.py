@@ -96,8 +96,9 @@ class GenerateContentResponse:
 注意，請回傳你的回覆就好。
 """
         elif style == 'choose':
+            choice = random.choice(["要", "不要"])
             return f"""幫我做出決定：{cleaned_content}，
-請給我一個建議，並且附上理由，理由簡短限制在30字以內。首先先回答要或是不要，再來給出理由。不管問題是什麼，請都用繁體中文給我決定一個選項並且回覆。"""
+請告訴我**{choice}**的理由，理由簡短限制在30字以內。首先先回答{choice}，再來給出理由。不管問題是什麼，請都用繁體中文給我決定一個選項並且回覆。"""
 
     def generate_response(self, cleaned_content, style):
         prompt = self.generate_prompt(cleaned_content, style)
