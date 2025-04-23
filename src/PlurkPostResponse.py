@@ -15,7 +15,7 @@ class PlurkPostResponse:
     """
     def __init__(self, plurk_api, content_response):
         self.plurk = plurk_api
-        self.gemini_api = content_response
+        self.gemini_response = content_response
         self.comet_channel = None
         self.new_offset = -1
         self.jsonp_re = re.compile(r'CometChannel\.scriptCallback\((.+)\);\s*')
@@ -47,7 +47,7 @@ class PlurkPostResponse:
             if (qualifier == 'hopes' or qualifier == 'wishes') and '!抽' in content: # 希望
                 cleaned_content = content.replace(' ', '').replace('!抽', '')
                 logging.info(f"清理後的內容: {cleaned_content}")
-                response_parts = self.gemini_api.generate_response(cleaned_content, 'tarot')
+                response_parts = self.gemini_response.generate_response(cleaned_content, 'tarot')
                 for part in response_parts:
                     logging.info(f"回覆內容: {part.strip()}")
                     self.plurk.callAPI('/APP/Responses/responseAdd', {
@@ -59,7 +59,7 @@ class PlurkPostResponse:
             elif qualifier == 'wants' and '!抱怨' in content: # 想要
                 cleaned_content = content.replace(' ', '').replace('!抱怨', '')
                 logging.info(f"清理後的內容: {cleaned_content}")
-                response_parts = self.gemini_api.generate_response(cleaned_content, 'bad_advice')
+                response_parts = self.gemini_response.generate_response(cleaned_content, 'bad_advice')
                 for part in response_parts:
                     logging.info(f"回覆內容: {part.strip()}")
                     self.plurk.callAPI('/APP/Responses/responseAdd', {
@@ -71,7 +71,7 @@ class PlurkPostResponse:
             elif qualifier == 'asks' and '!為什麼' in content: # 問
                 cleaned_content = content.replace(' ', '').replace('!為什麼', '')
                 logging.info(f"清理後的內容: {cleaned_content}")
-                response_parts = self.gemini_api.generate_response(cleaned_content, 'rap')
+                response_parts = self.gemini_response.generate_response(cleaned_content, 'rap')
                 for part in response_parts:
                     logging.info(f"回覆內容: {part.strip()}")
                     self.plurk.callAPI('/APP/Responses/responseAdd', {
@@ -109,14 +109,30 @@ class PlurkPostResponse:
                     "好與不好之間的界線今天很模糊，建議你保持迷茫，這樣比較安全。",
                     "今日可買樂透，但只能買一張，不然就是貪。",
                     "今天早上11點37分前說出的第三句話，將影響你今天的第六餐。",
+                    "有一個門為你打開，但你進去後可能發現那是廁所。",
                     "今日切勿與西瓜爭辯，尤其在雨後。",
+                    "你的大腦今天只想吃炸雞。",
                     "不好吧",
                     "今天還行",
                     "今天宜多喝水",
-                    "今天宜多喝熱水"]),
+                    "今天宜多喝熱水",
+                    "今天宜多喝冷水",
+                    "今天宜多喝冰水",
+                    "今天宜多喝熱茶",]),
                     'qualifier': 'thinks'
                 })
                 time.sleep(1)
+            elif qualifier == 'asks' and '!要不要' in content:
+                cleaned_content = content.replace(' ', '').replace('!要不要', '')
+                logging.info(f"清理後的內容: {cleaned_content}")
+                response = self.gemini_response.generate_response(cleaned_content, 'choose')
+                if response:
+                    self.plurk.callAPI('/APP/Responses/responseAdd', {
+                        'plurk_id': pid,
+                        'content': response,
+                        'qualifier': 'feels'
+                    })
+                    time.sleep(1)
             else:
                 random_num = random.randint(1, 100)
 
