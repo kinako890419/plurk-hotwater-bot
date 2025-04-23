@@ -4,9 +4,14 @@
 
 ## 功能
 
-- <span style="background-color:#E28EE1"><font color="#FFFFFF">希望</font></span> + `!抽` + 噗文
-- <span style="background-color:#A9B683"><font color="#FFFFFF">想要</font></span> + `!抱怨` + 噗文
-- <span style="background-color:#A48AC0"><font color="#FFFFFF">問</font></span> + `!為什麼` + 噗文
+| qualifier | 關鍵字         | 備註          |
+| --------- | ----------- | ----------- |
+| 希望        | `!抽`        | 抽三張塔羅牌      |
+| 想要        | `!抱怨`       |             |
+| 問         | `!為什麼`      |             |
+| 問         | `!要不要`      | 隨機決定選項+解釋理由 |
+| -         | `要不要`、`好不好` | 只有回覆隨機的決定選項 |
+| -         | 其他關鍵字       |             |
 
 驚嘆號全形或是半形皆可
 
