@@ -21,7 +21,7 @@ class PlurkDailyPost:
     def schedule_daily_post(self):
 
         # 每日發文
-        schedule.every().day.at("17:15", "Asia/Taipei").do(self.post_daily_message)
+        schedule.every().day.at("18:00").do(self.post_daily_message)
 
         # 等待並執行排程
         while True:
