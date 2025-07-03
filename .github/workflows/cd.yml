@@ -19,43 +19,69 @@ jobs:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Deploy Code to GCE
+    - name: Configure gcloud
       run: |
-        # Copy files to GCE instance
-        gcloud compute scp --recurse \
-          --project=${{ secrets.GCP_PROJECT_ID }} \
-          --zone=${{ secrets.GCE_ZONE }} \
-          ./* ${{ secrets.GCE_INSTANCE }}:~/plurk-hotwater-bot/
+        gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+        gcloud auth list
+        gcloud config list
 
-    - name: Setup and Run Bot
+    - name: Create deployment script
       run: |
-        gcloud compute ssh ${{ secrets.GCE_INSTANCE }} \
-          --project=${{ secrets.GCP_PROJECT_ID }} \
+        cat > deploy.sh << 'EOF'
+        #!/bin/bash
+        cd ~
+        
+        # Remove old directory
+        rm -rf plurk-hotwater-bot
+        
+        # Create new directory
+        mkdir -p plurk-hotwater-bot
+        cd plurk-hotwater-bot
+        
+        # Clone the repository (alternative method)
+        git clone https://github.com/${{ github.repository }} .
+        
+        # Create .env file
+        cat > .env << 'ENVEOF'
+        PLURK_CONSUMER_KEY=${{ secrets.PLURK_CONSUMER_KEY }}
+        PLURK_CONSUMER_SECRET=${{ secrets.PLURK_CONSUMER_SECRET }}
+        PLURK_ACCESS_TOKEN=${{ secrets.PLURK_ACCESS_TOKEN }}
+        PLURK_ACCESS_TOKEN_SECRET=${{ secrets.PLURK_ACCESS_TOKEN_SECRET }}
+        GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+        ENVEOF
+        
+        # Install system dependencies
+        sudo apt-get update
+        sudo apt-get install -y python3-pip python3-venv screen git
+        
+        # Setup Python environment
+        python3 -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        
+        # Kill existing processes
+        pkill screen 2>/dev/null || true
+        pkill -f "python src/bot.py" 2>/dev/null || true
+        
+        # Start bot in screen session
+        screen -dmS plurk_bot_screen bash -c 'source venv/bin/activate && python src/bot.py'
+        
+        # Verify the bot is running
+        sleep 3
+        screen -ls
+        
+        echo "Deployment completed successfully!"
+        EOF
+
+    - name: Deploy to GCE using startup script
+      run: |
+        # Copy the deployment script to the instance and execute
+        gcloud compute scp deploy.sh ${{ secrets.GCE_INSTANCE }}:~/deploy.sh \
           --zone=${{ secrets.GCE_ZONE }} \
-          --command="
-            cd ~/plurk-hotwater-bot
-            
-            # Kill existing screen sessions
-            pkill screen 2>/dev/null || true
-            
-            # Create .env file with secrets
-            cat > .env << EOF
-            PLURK_CONSUMER_KEY=${{ secrets.PLURK_CONSUMER_KEY }}
-            PLURK_CONSUMER_SECRET=${{ secrets.PLURK_CONSUMER_SECRET }}
-            PLURK_ACCESS_TOKEN=${{ secrets.PLURK_ACCESS_TOKEN }}
-            PLURK_ACCESS_TOKEN_SECRET=${{ secrets.PLURK_ACCESS_TOKEN_SECRET }}
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            EOF
-            
-            # Setup Python environment
-            sudo apt-get update
-            sudo apt-get install -y python3-pip python3-venv screen
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
-            
-            # Start bot in screen session
-            screen -dmS plurk_bot_screen bash -c 'source venv/bin/activate && python src/bot.py'
-            
-            echo 'Bot deployment completed successfully!'
-          "
+          --project=${{ secrets.GCP_PROJECT_ID }}
+        
+        # Execute the deployment script
+        gcloud compute ssh ${{ secrets.GCE_INSTANCE }} \
+          --zone=${{ secrets.GCE_ZONE }} \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --command="chmod +x ~/deploy.sh && ~/deploy.sh"
