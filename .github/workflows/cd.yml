@@ -13,26 +13,47 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Set Up SSH Key
-      shell: bash
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_KEY }}" > ~/plurk-bot.pem
-        chmod 400 ~/plurk-bot.pem
-        chmod 700 ~/.ssh
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-        chmod 600 ~/.ssh/known_hosts
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Deploy Code
-      shell: bash
+    - name: Deploy Code to GCE
       run: |
-        scp -i ~/plurk-bot.pem -r * ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/plurk-hotwater-bot
-        ssh -i ~/plurk-bot.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          cd ~/plurk-hotwater-bot
-          # Kill all existing screen sessions
-          pkill screen 2>/dev/null || true
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-          screen -dmS plurk_bot_screen bash -c 'source venv/bin/activate && python src/bot.py'
-        EOF
+        # Copy files to GCE instance
+        gcloud compute scp --recurse \
+          --zone=${{ secrets.GCE_ZONE }} \
+          ./* ${{ secrets.GCE_INSTANCE }}:~/plurk-hotwater-bot/
+
+    - name: Setup and Run Bot
+      run: |
+        gcloud compute ssh ${{ secrets.GCE_INSTANCE }} \
+          --zone=${{ secrets.GCE_ZONE }} \
+          --command="
+            cd ~/plurk-hotwater-bot
+            
+            # Kill existing screen sessions
+            pkill screen 2>/dev/null || true
+            
+            # Create .env file with secrets
+            cat > .env << EOF
+            PLURK_CONSUMER_KEY=${{ secrets.PLURK_CONSUMER_KEY }}
+            PLURK_CONSUMER_SECRET=${{ secrets.PLURK_CONSUMER_SECRET }}
+            PLURK_ACCESS_TOKEN=${{ secrets.PLURK_ACCESS_TOKEN }}
+            PLURK_ACCESS_TOKEN_SECRET=${{ secrets.PLURK_ACCESS_TOKEN_SECRET }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            EOF
+            
+            # Setup Python environment
+            sudo apt-get update
+            sudo apt-get install -y python3-pip python3-venv screen
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+            
+            # Start bot in screen session
+            screen -dmS plurk_bot_screen bash -c 'source venv/bin/activate && python src/bot.py'
+            
+            echo 'Bot deployment completed successfully!'
+          "
