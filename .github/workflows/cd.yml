@@ -23,12 +23,14 @@ jobs:
       run: |
         # Copy files to GCE instance
         gcloud compute scp --recurse \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
           --zone=${{ secrets.GCE_ZONE }} \
           ./* ${{ secrets.GCE_INSTANCE }}:~/plurk-hotwater-bot/
 
     - name: Setup and Run Bot
       run: |
         gcloud compute ssh ${{ secrets.GCE_INSTANCE }} \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
           --zone=${{ secrets.GCE_ZONE }} \
           --command="
             cd ~/plurk-hotwater-bot
