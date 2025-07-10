@@ -1,17 +1,17 @@
 import schedule
 import time
-from datetime import datetime #, timedelta
-# import pytz
+from datetime import datetime
+import pytz
 import logging
 
 class PlurkDailyPost:
     def __init__(self, plurk_api):
         self.plurk = plurk_api
-        self.last_post_date = None 
+        self.last_post_date = None
+        self.taipei_tz = pytz.timezone('Asia/Taipei')
 
     def post_daily_message(self):
-        # 獲取當前日期並格式化為 年/月/日
-        current_date = datetime.now().strftime("%Y/%m/%d")
+        current_date = datetime.now(self.taipei_tz).strftime("%Y/%m/%d")
         
         # 判斷今天是否已發文
         if self.last_post_date == current_date:
@@ -27,7 +27,7 @@ class PlurkDailyPost:
         })
 
     def schedule_daily_post(self):
-
+       
         # 每日發文
         schedule.every().day.at("18:00").do(self.post_daily_message)
 
