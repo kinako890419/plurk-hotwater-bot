@@ -172,13 +172,15 @@ class PlurkPostResponse:
 
     def process_messages(self, msgs):
         for msg in msgs:
-            if msg.get('type') == 'new_plurk':
+            if (msg.get('type') == 'new_plurk') and (msg.get('plurk_type') == 0):
                 pid = msg.get('plurk_id')
                 user_id = msg.get('user_id')  # 取得 user_id
                 content = msg.get('content_raw')
                 qualifier = msg.get('qualifier')
                 logging.info(f"{user_id} 新訊息: {qualifier} - {content}")
                 self.respond_to_message(pid, user_id, content, qualifier)
+            else:
+                continue
 
     def run(self):
         while True:
