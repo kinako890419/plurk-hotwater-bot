@@ -5,6 +5,7 @@ import threading
 import time
 import urllib.request
 import random
+import os
 
 import schedule
 
@@ -21,25 +22,115 @@ class PlurkPostResponse:
         self.jsonp_re = re.compile(r'CometChannel\.scriptCallback\((.+)\);\s*')
         self.user_status = []
         logging.info("PlurkBot 初始化完成")
-        schedule.every().day.at("00:00").do(self.clear_user_status)
+        schedule.every().day.at("00:00").do(self._clear_user_status)
         threading.Thread(target=self._run_schedule, daemon=True).start()
+        # 讀取每日運勢 JSON
+        fortune_path = os.path.join(os.path.dirname(__file__), 'daily_fortune.json')
+        try:
+            with open(fortune_path, 'r', encoding='utf-8') as f:
+                self.daily_fortune_list = json.load(f)
+            logging.info("已載入每日運勢 JSON")
+        except Exception as e:
+            logging.error(f"載入每日運勢 JSON 失敗: {e}")
+            self.daily_fortune_list = [
+                "不好吧",
+                "今天還行",
+                "今天宜多喝水",
+                "今天宜多喝熱水",
+                "今天宜多喝冷水",
+                "今天宜多喝冰水",
+                "今天宜多喝熱茶",
+            ]
 
-    def clear_user_status(self):
+    def run(self):
+        while True:
+            try:
+                self._get_comet_channel()
+                # logging.info("啟動 PlurkBot")
+                self.plurk.callAPI('/APP/Alerts/addAllAsFriends')
+                req = urllib.request.urlopen(self.comet_channel % self.new_offset, timeout=80)
+                rawdata = req.read().decode('utf-8')
+                match = self.jsonp_re.match(rawdata)
+                if match:
+                    rawdata = match.group(1)
+                data = json.loads(rawdata)
+                self.new_offset = data.get('new_offset', -1)
+                msgs = data.get('data')
+                if msgs:
+                    self._process_messages(msgs)
+            except Exception as e:
+                logging.error(f"發生錯誤: {e}")
+
+    def _clear_user_status(self):
         self.user_status.clear()
         logging.info("清空 user_status")
+
+    def _get_current_user_id(self):
+        """取得當前使用者 ID"""
+        try:
+            user_info = self.plurk.callAPI('/APP/Users/me')
+            return user_info.get('id')
+        except Exception as e:
+            logging.error(f"無法取得當前使用者 ID: {e}")
+            return None
+
+    def _is_friend(self, user_id):
+        """檢查使用者是否為好友"""
+        try:
+            logging.info(f"檢查 {user_id} 是否為好友...")
+            
+            # 取得當前使用者 ID
+            current_user_id = self._get_current_user_id()
+            if not current_user_id:
+                return False
+            
+            friends_data = []
+            offset = 0
+            
+            # 分批取得所有好友
+            while True:
+                batch = self.plurk.callAPI('/APP/FriendsFans/getFriendsByOffset', {
+                    'user_id': current_user_id,
+                    'offset': offset,
+                    'limit': 100
+                })
+                
+                if not batch or len(batch) == 0:
+                    break
+                    
+                friends_data.extend(batch)
+                offset += 100
+                
+                if len(batch) < 100:  # 如果回傳數量少於限制，表示已到最後一頁
+                    break
+            
+            # 檢查是否在好友列表中
+            friend_ids = {friend['id'] for friend in friends_data}
+            friend_list = user_id in friend_ids
+
+            return friend_list
+            
+        except Exception as e:
+            logging.error(f"檢查好友狀態時發生錯誤: {e}")
+            return False 
 
     def _run_schedule(self):
         while True:
             schedule.run_pending()
             time.sleep(1)
     
-    def get_comet_channel(self):
+    def _get_comet_channel(self):
         comet = self.plurk.callAPI('/APP/Realtime/getUserChannel')
         self.comet_channel = comet.get('comet_server') + "&new_offset=%d"
         logging.info("取得 Comet Channel")
 
-    def respond_to_message(self, pid, user_id, content, qualifier):
+    def _respond_to_message(self, pid, user_id, owner_id, content, qualifier):
         try:
+            # 檢查發文者是否為好友
+            if not self._is_friend(owner_id):
+                logging.info(f"跳過非好友 {owner_id} 的訊息")
+                return
+                
             if "！" in content:
                 content = content.replace("！", "!")
             logging.info(f"處理訊息: {content} (qualifier: {qualifier})")
@@ -93,32 +184,7 @@ class PlurkPostResponse:
                 self.user_status.append(user_id)
                 self.plurk.callAPI('/APP/Responses/responseAdd', {
                     'plurk_id': pid,
-                    'content': random.choice(['今天運勢不錯', '今天運勢一般', "今天一切順利",
-                    "今天一切順利，只要你放棄掙扎，接受命運。",
-                    "今天你做什麼都會順...如果你有做點什麼的話啦。",
-                    "你的今日運勢是：無法載入，請重啟你的人格。",
-                    "先吃東西，其他晚點再說。",
-                    "你今天像一顆鈕扣電池 — 看起來有用，但其實快沒電了。",
-                    "今天一切都還行，只要你不打開訊息、不接電話、不出門。",
-                    "你今天會突然有種豁然開朗的感覺，不是你開竅了，是生活終於懶得打你了。",
-                    "你今天的荷包比你的人生還穩定，這是一種罕見奇蹟，請好好珍惜。",
-                    "今天投資有望，但前提是你有錢可以投。",
-                    "今天出門會遇到有趣的人…對方不一定這麼想。",
-                    "今天老闆今天心情不錯，適合偷偷離職。",
-                    "有一筆意外之財在路上……但它導航錯了，去了別人家。",
-                    "好與不好之間的界線今天很模糊，建議你保持迷茫，這樣比較安全。",
-                    "今日可買樂透，但只能買一張，不然就是貪。",
-                    "今天早上11點37分前說出的第三句話，將影響你今天的第六餐。",
-                    "有一個門為你打開，但你進去後可能發現那是廁所。",
-                    "今日切勿與西瓜爭辯，尤其在雨後。",
-                    "你的大腦今天只想吃炸雞。",
-                    "不好吧",
-                    "今天還行",
-                    "今天宜多喝水",
-                    "今天宜多喝熱水",
-                    "今天宜多喝冷水",
-                    "今天宜多喝冰水",
-                    "今天宜多喝熱茶",]),
+                    'content': random.choice(self.daily_fortune_list),
                     'qualifier': 'thinks'
                 })
                 time.sleep(1)
@@ -170,33 +236,15 @@ class PlurkPostResponse:
         except Exception as e:
             logging.error(f"回覆訊息發生錯誤: {e}")
 
-    def process_messages(self, msgs):
+    def _process_messages(self, msgs):
         for msg in msgs:
             if (msg.get('type') == 'new_plurk') and (msg.get('plurk_type') == 0):
                 pid = msg.get('plurk_id')
-                user_id = msg.get('user_id')  # 取得 user_id
+                user_id = msg.get('user_id')  # 噗文所屬的時間軸 ID
+                owner_id = msg.get('owner_id')  # 噗文的原始發文者 ID
                 content = msg.get('content_raw')
                 qualifier = msg.get('qualifier')
-                logging.info(f"{user_id} 新訊息: {qualifier} - {content}")
-                self.respond_to_message(pid, user_id, content, qualifier)
+                logging.info(f"{owner_id} 新訊息: {qualifier} - {content}")
+                self._respond_to_message(pid, user_id, owner_id, content, qualifier)
             else:
                 continue
-
-    def run(self):
-        while True:
-            try:
-                self.get_comet_channel()
-                # logging.info("啟動 PlurkBot")
-                self.plurk.callAPI('/APP/Alerts/addAllAsFriends')
-                req = urllib.request.urlopen(self.comet_channel % self.new_offset, timeout=80)
-                rawdata = req.read().decode('utf-8')
-                match = self.jsonp_re.match(rawdata)
-                if match:
-                    rawdata = match.group(1)
-                data = json.loads(rawdata)
-                self.new_offset = data.get('new_offset', -1)
-                msgs = data.get('data')
-                if msgs:
-                    self.process_messages(msgs)
-            except Exception as e:
-                logging.error(f"發生錯誤: {e}")
